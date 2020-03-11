@@ -1,3 +1,5 @@
+import com.sun.xml.internal.bind.v2.model.core.ID;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +15,14 @@ public class EmployeeDAOImpl implements employeeDAO {
     public static final String GET_All_emp = "select * from Employee";
     public static final String ADD_EMP = "insert into Employee" +
             "(empID,name,position,salary) values (?,?,?,?)";
-    public static final String UPDATE_EMP = "update Employee dat" +
-            "name = ?,position = ?,salary = ? where id = ?";
+    public static final String UPDATE_EMP = "update Employee set" +
+            " name = ?,position = ?,salary = ? where empID = ?";
     public static final String DELETE_EMP = "delete from Employee"+
-            "where empID = ?";
+            " where empID =?";
+    public static final String FIND_EMP_BY_ID = "select * from Employee"+
+            " where empID = ?";
+
+
     //create class instant
     private static EmployeeDAOImpl instant = new EmployeeDAOImpl();
 
@@ -74,6 +80,7 @@ public class EmployeeDAOImpl implements employeeDAO {
             ps.setString(2,newEmp.getName());
             ps.setString(3,newEmp.getPosition());
             ps.setDouble(4,newEmp.getSalary());
+
             boolean rs = ps.execute();
             if (rs == true){
                 System.out.println("Could not add data tob database");
@@ -90,29 +97,31 @@ public class EmployeeDAOImpl implements employeeDAO {
 
     @Override
     public void updateEmp(Employee employee) {
-            try {
-                conn = DriverManager.getConnection(url);
-                PreparedStatement ps = conn.prepareStatement(UPDATE_EMP);
-                //set parameter
-                ps.setString(1,employee.getName());
-                ps.setString(1,employee.getPosition());
-                ps.setDouble(1,employee.getSalary());
-                ps.setInt(1,employee.getEmpID());
+        try {
+            conn = DriverManager.getConnection(url);
+            PreparedStatement ps = conn.prepareStatement(UPDATE_EMP);
+            //set parameter
+            ps.setString(1,employee.getName());
+            ps.setString(1,employee.getPosition());
+            ps.setDouble(1,employee.getSalary());
+            ps.setInt(1,employee.getEmpID());
 
 
-                int rs = ps.executeUpdate();
-                if (rs != 0){
-                    System.out.println("Data with empID"
-                            +employee.getEmpID() + "was update.") ;
-                }  else{
-                    System.out.println("Cloud not update data with empID"
-                            + employee.getEmpID());
-                }
-                ps.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            int rs = ps.executeUpdate();
+            if (rs != 0){
+                System.out.println("Data with empID"
+                        +employee.getEmpID() + "was update.") ;
+            }  else{
+                System.out.println("Cloud not update data with empID"
+                        + employee.getEmpID());
             }
+            ps.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
@@ -121,53 +130,57 @@ public class EmployeeDAOImpl implements employeeDAO {
         try {
             conn = DriverManager.getConnection(url);
             PreparedStatement ps = conn.prepareStatement(UPDATE_EMP);
-            //
-            ps.setInt(1, id);
+            //set parameter
+            ps.setInt(1,id);
             int rs = ps.executeUpdate();
-            if (rs != 0) {
-                System.out.println("Employee with empID " + id + "was deleted.");
-            } else {
-                System.out.println("Cloud not deleted Employee" + "with empID" + id);
+            if (rs != 0){
+                System.out.println("Employee with empID"
+                        + id + "as deleted.");
+            } else{
+                System.out.println("Could not delete Employee"
+                        +"wite empID" + id);
             }
+            ps.close();
+            conn.close();
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    @Override
+    public Employee findEmp(int id) {
+        Employee emp = null;
+        try {
+            conn = DriverManager.getConnection(url);
+            PreparedStatement ps = conn.prepareStatement(FIND_EMP_BY_ID);
+            //set parameter
+            ps.setInt(1,id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()){
+                int empid = rs.getInt(1);
+                String name = rs.getString(2);
+                String position = rs.getString(3);
+                double salary = rs.getDouble(4);
+
+                emp = new Employee(empid,name,position,salary);
+
+            }else{
+                System.out.println("Cloud not found Employee" +
+                        "with empID" +id);
+            }
+            rs.close();
             ps.close();
             conn.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
+        return emp;
 
-    @Override
-    public Employee findEmp(int id) {
-        Employee emp = null;
-
-            try {
-                conn = DriverManager.getConnection(url);
-                PreparedStatement ps = conn.prepareStatement(FIND_EMP_BY_ID);
-                //set parameter
-                ps.setInt(1,id);
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()){
-                    int empid = rs.getInt(1);
-                    String name = rs.getString(2);
-                    String position = rs.getString(3);
-                    double salary = rs.getDouble(4);
-
-                    emp = new Employee(empid,name,position,salary);
-
-                }else{
-                    System.out.println("Cloud not found Employee" +
-                            "with empID" +id);
-                }
-                rs.close();
-                ps.close();
-                conn.close();
-                {
-                    return emp;
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
 
 
     }
